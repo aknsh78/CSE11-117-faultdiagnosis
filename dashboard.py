@@ -32,241 +32,234 @@ st.set_page_config(
 st.html("""
 <style>
 
-    /* ---------- GLOBAL ---------- */
+    :root {
+        --navy-950: #07111f;
+        --navy-900: #0b1b2b;
+        --navy-800: #10283b;
+        --panel: rgba(17, 43, 60, .88);
+        --line: #24516a;
+        --text: #f4fbff;
+        --muted: #91b2c2;
+        --teal: #35d0c2;
+        --cyan: #57c7ff;
+        --amber: #ffbd69;
+        --coral: #ff7b78;
+    }
 
     .stApp {
-        background: #0b1120;
-        color: #e5e7eb;
+        background: radial-gradient(circle at 82% 0%, #123b4b 0%, transparent 34%),
+                    linear-gradient(135deg, var(--navy-950) 0%, #091827 52%, #0d2332 100%);
+        color: var(--text);
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
     }
 
     .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
         max-width: 1500px;
+        padding: 2.5rem 2.5rem 2rem;
     }
-
-    /* ---------- SIDEBAR ---------- */
 
     [data-testid="stSidebar"] {
-        background: #080d18;
-        border-right: 1px solid #1e293b;
+        background: linear-gradient(180deg, #081521 0%, #0b2431 100%);
+        border-right: 1px solid #1d4b60;
     }
 
-    [data-testid="stSidebar"] h1 {
-        color: #f8fafc;
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3 {
+        color: var(--text);
+        letter-spacing: .02em;
     }
 
-    /* ---------- HEADER ---------- */
+    [data-testid="stSidebar"] hr {
+        border-color: #1d4b60;
+    }
+
+    [data-testid="stSidebar"] .stCaption,
+    [data-testid="stSidebar"] p {
+        color: var(--muted);
+    }
+
+    [data-testid="stSidebar"] .stButton > button {
+        background: linear-gradient(135deg, #1a6c75, #1b9b93);
+        border: 1px solid #46d5c8;
+        color: #effffc;
+        font-weight: 700;
+        box-shadow: 0 8px 22px rgba(21, 179, 167, .18);
+    }
 
     .main-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 22px 26px;
+        padding: 27px 30px;
         margin-bottom: 24px;
-        border-radius: 16px;
-        background: linear-gradient(
-            135deg,
-            #111827,
-            #172033
-        );
-        border: 1px solid #263449;
+        border-radius: 18px;
+        background: linear-gradient(120deg, rgba(17, 61, 78, .98), rgba(13, 34, 53, .94));
+        border: 1px solid #2e7186;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, .22);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .main-header::after {
+        content: "";
+        position: absolute;
+        width: 210px;
+        height: 210px;
+        right: -70px;
+        top: -100px;
+        border: 1px solid rgba(87, 199, 255, .35);
+        border-radius: 50%;
+        box-shadow: 0 0 0 18px rgba(87, 199, 255, .05), 0 0 0 38px rgba(87, 199, 255, .035);
     }
 
     .brand-title {
-        font-size: 30px;
+        color: var(--text);
+        font-size: 31px;
         font-weight: 800;
-        color: #f8fafc;
+        letter-spacing: .01em;
         margin: 0;
     }
 
     .brand-subtitle {
-        color: #94a3b8;
+        color: #a9c8d5;
         font-size: 14px;
-        margin-top: 5px;
+        margin-top: 7px;
     }
 
     .live-badge {
-        padding: 8px 15px;
-        border-radius: 30px;
-        background: #052e24;
-        color: #34d399;
-        border: 1px solid #065f46;
-        font-size: 13px;
-        font-weight: 700;
+        z-index: 1;
+        padding: 9px 16px;
+        border-radius: 999px;
+        background: rgba(32, 176, 157, .14);
+        color: #70f5d6;
+        border: 1px solid #36bda9;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        box-shadow: 0 0 24px rgba(53, 208, 194, .12);
     }
 
-    /* ---------- STATUS ---------- */
+    .status-card,
+    .metric-card,
+    .sensor-card,
+    .info-box,
+    .ai-panel {
+        border-radius: 15px;
+        border: 1px solid var(--line);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, .14);
+    }
 
     .status-card {
-        padding: 25px;
-        border-radius: 16px;
+        padding: 25px 28px;
         margin-bottom: 20px;
-        border: 1px solid #334155;
     }
 
     .status-normal {
-        background: linear-gradient(
-            135deg,
-            #052e24,
-            #071f1a
-        );
-        border-color: #065f46;
+        background: linear-gradient(105deg, rgba(11, 92, 88, .9), rgba(9, 49, 57, .94));
+        border-color: #2fbdae;
     }
 
     .status-anomaly {
-        background: linear-gradient(
-            135deg,
-            #3b1111,
-            #210b0b
-        );
-        border-color: #7f1d1d;
+        background: linear-gradient(105deg, rgba(128, 48, 55, .9), rgba(64, 28, 39, .94));
+        border-color: #ff7777;
     }
 
     .status-unknown {
-        background: linear-gradient(
-            135deg,
-            #3b2a11,
-            #21180b
-        );
-        border-color: #854d0e;
+        background: linear-gradient(105deg, rgba(126, 83, 32, .9), rgba(62, 48, 26, .94));
+        border-color: var(--amber);
     }
 
-    .status-label {
-        font-size: 13px;
-        color: #94a3b8;
+    .status-label,
+    .metric-title,
+    .sensor-name,
+    .info-title,
+    .probability-label {
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: .08em;
         text-transform: uppercase;
-        letter-spacing: 1px;
     }
 
     .status-value {
+        color: var(--text);
         font-size: 32px;
         font-weight: 800;
-        margin-top: 5px;
+        margin-top: 6px;
     }
 
     .status-description {
-        color: #cbd5e1;
+        color: #d2e5eb;
         margin-top: 8px;
         font-size: 14px;
     }
 
-    /* ---------- METRIC CARDS ---------- */
-
     .metric-card {
-        background: #111827;
-        border: 1px solid #263449;
-        border-radius: 14px;
+        background: linear-gradient(145deg, rgba(18, 51, 69, .94), rgba(12, 31, 47, .94));
         padding: 18px;
         height: 125px;
+        border-top: 2px solid rgba(87, 199, 255, .55);
     }
 
-    .metric-title {
-        color: #94a3b8;
-        font-size: 13px;
-        margin-bottom: 10px;
-    }
+    .metric-title { margin-bottom: 10px; }
 
     .metric-value {
-        color: #f8fafc;
+        color: var(--text);
         font-size: 27px;
-        font-weight: 750;
+        font-weight: 800;
     }
 
-    .metric-unit {
-        color: #64748b;
-        font-size: 12px;
-        margin-left: 4px;
-    }
-
-    /* ---------- SECTION ---------- */
+    .metric-unit { color: var(--cyan); font-size: 12px; margin-left: 4px; }
 
     .section-title {
+        color: var(--text);
         font-size: 19px;
-        font-weight: 750;
-        color: #f8fafc;
-        margin-top: 25px;
-        margin-bottom: 14px;
+        font-weight: 800;
+        margin: 28px 0 14px;
+        border-left: 3px solid var(--teal);
+        padding-left: 11px;
     }
-
-    /* ---------- SENSOR CARDS ---------- */
 
     .sensor-card {
-        background: #111827;
-        border: 1px solid #263449;
-        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(17, 48, 64, .9), rgba(11, 29, 44, .92));
         padding: 16px;
         margin-bottom: 12px;
+        border-left: 3px solid rgba(255, 189, 105, .8);
     }
 
-    .sensor-name {
-        color: #94a3b8;
-        font-size: 12px;
-    }
-
-    .sensor-value {
-        color: #e2e8f0;
-        font-size: 21px;
-        font-weight: 700;
-        margin-top: 5px;
-    }
-
-    /* ---------- AI PANEL ---------- */
+    .sensor-value { color: #f0fbff; font-size: 21px; font-weight: 800; margin-top: 5px; }
 
     .ai-panel {
-        background: linear-gradient(
-            135deg,
-            #111827,
-            #151e31
-        );
-        border: 1px solid #334155;
-        border-radius: 16px;
+        background: linear-gradient(145deg, rgba(20, 62, 78, .96), rgba(12, 34, 53, .96));
         padding: 22px;
+        border-color: #34788d;
     }
 
-    .probability-number {
-        font-size: 42px;
-        font-weight: 800;
-        color: #f8fafc;
-    }
-
-    .probability-label {
-        color: #94a3b8;
-        font-size: 13px;
-    }
-
-    /* ---------- INFO BOX ---------- */
+    .probability-number { color: var(--cyan); font-size: 42px; font-weight: 800; }
 
     .info-box {
-        background: #111827;
-        border: 1px solid #263449;
-        border-radius: 12px;
+        background: rgba(17, 48, 64, .82);
         padding: 17px;
         margin-bottom: 12px;
     }
 
-    .info-title {
-        color: #64748b;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: .7px;
-    }
-
-    .info-value {
-        color: #e2e8f0;
-        font-size: 15px;
-        margin-top: 6px;
-    }
-
-    /* ---------- FOOTER ---------- */
+    .info-title { color: #78a4b5; }
+    .info-value { color: #e2f5fa; font-size: 15px; margin-top: 6px; }
 
     .footer {
         text-align: center;
-        color: #475569;
+        color: #6b96a5;
         font-size: 12px;
         padding: 25px;
         margin-top: 35px;
-        border-top: 1px solid #1e293b;
+        border-top: 1px solid #1d4b60;
+    }
+
+    @media (max-width: 700px) {
+        .block-container { padding: 1.25rem 1rem; }
+        .main-header { align-items: flex-start; flex-direction: column; gap: 18px; padding: 22px; }
+        .brand-title { font-size: 26px; }
+        .status-value { font-size: 25px; }
     }
 
 </style>
