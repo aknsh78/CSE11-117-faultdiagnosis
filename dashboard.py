@@ -600,7 +600,9 @@ try:
         history = pd.read_csv("historical_data.csv")
 
         history["timestamp"] = pd.to_datetime(
-            history["timestamp"]
+            history["timestamp"],
+            format="mixed",
+            errors="coerce"
         )
 
         history = (
@@ -1027,7 +1029,9 @@ try:
         fault_history = pd.read_csv("historical_data.csv")
 
         fault_history["timestamp"] = pd.to_datetime(
-            fault_history["timestamp"]
+            fault_history["timestamp"],
+            format="mixed",
+            errors="coerce"
         )
 
         fault_history = (
