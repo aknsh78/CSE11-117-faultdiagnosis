@@ -1,0 +1,31 @@
+{
+    "NORMAL": {
+        "severity": "NORMAL",
+        "cause": "All monitored sensor parameters are within normal operating ranges.",
+        "recommendation": "No immediate maintenance action required."
+    },
+
+    "BEARING_FAULT": {
+        "severity": "HIGH",
+        "cause": "Abnormally high machine vibration indicates a possible bearing problem.",
+        "recommendation": "Inspect bearing condition, lubrication and shaft alignment."
+    },
+
+    "OVERLOAD": {
+        "severity": "HIGH",
+        "cause": "Excessive current indicates that the machine may be operating under excessive load.",
+        "recommendation": "Reduce machine load and inspect the motor and connected load."
+    },
+
+    "VOLTAGE_FAULT": {
+        "severity": "HIGH",
+        "cause": "Supply voltage is outside the normal operating range.",
+        "recommendation": "Inspect the power supply, wiring and voltage regulation."
+    },
+
+    "PRESSURE_FAULT": {
+        "severity": "MEDIUM",
+        "cause": "Machine pressure is outside the normal operating range.",
+        "recommendation": "Inspect the pressure system, valves and connections."
+    }
+}
