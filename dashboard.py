@@ -361,6 +361,54 @@ with st.sidebar:
         "🔄 Refresh Dashboard",
         use_container_width=True
     ):
+        # Demo/cloud refresh: rotate through real historical records.
+        # Local MQTT/PostgreSQL data remains preferred when available.
+        try:
+            demo_history = pd.read_csv("historical_data.csv")
+            demo_history["timestamp"] = pd.to_datetime(
+                demo_history["timestamp"],
+                format="mixed",
+                errors="coerce"
+            )
+            demo_history = demo_history.dropna(subset=["timestamp"])
+
+            if not demo_history.empty:
+                current_index = st.session_state.get("demo_index", -1)
+                next_index = (current_index + 1) % len(demo_history)
+                st.session_state["demo_index"] = next_index
+
+                selected = demo_history.iloc[next_index].to_dict()
+
+                key_map = {
+                    "device_id": "device_id",
+                    "timestamp": "timestamp",
+                    "temperature": "temperature",
+                    "current": "current",
+                    "voltage": "voltage",
+                    "pressure": "pressure",
+                    "accelerometer1_rms": "accelerometer1_rms",
+                    "accelerometer2_rms": "accelerometer2_rms",
+                    "thermocouple": "thermocouple",
+                    "volume_flow_rate_rms": "volume_flow_rate_rms",
+                    "anomaly_probability": "anomaly_probability",
+                    "fault": "fault",
+                    "severity": "severity",
+                    "cause": "cause",
+                    "recommendation": "recommendation",
+                    "ground_truth_fault": "ground_truth_fault"
+                }
+
+                for data_key, csv_key in key_map.items():
+                    if csv_key in selected and pd.notna(selected[csv_key]):
+                        data[data_key] = selected[csv_key]
+
+                with open(DATA_FILE, "w") as file:
+                    json.dump(data, file, default=str, indent=2)
+
+        except Exception:
+            # If the demo CSV is unavailable, simply rerun the dashboard.
+            pass
+
         st.rerun()
 
 
