@@ -564,36 +564,39 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-try:
-    connection = get_connection()
+if get_connection is not None:
 
-    history = pd.read_sql_query(
-        """
-        SELECT
-            timestamp,
-            temperature,
-            current,
-            voltage,
-            accelerometer1_rms,
-            accelerometer2_rms,
-            anomaly_probability,
-            fault
-        FROM public.sensor_readings
-        ORDER BY timestamp DESC
-        LIMIT 100
-        """,
-        connection
-    )
+    try:
+        connection = get_connection()
 
-    connection.close()
+        history = pd.read_sql_query(
+            """
+            SELECT
+                timestamp,
+                temperature,
+                current,
+                voltage,
+                accelerometer1_rms,
+                accelerometer2_rms,
+                anomaly_probability,
+                fault
+            FROM public.sensor_readings
+            ORDER BY timestamp DESC
+            LIMIT 100
+            """,
+            connection
+        )
 
-    history["timestamp"] = pd.to_datetime(history["timestamp"])
-    history = history.sort_values("timestamp")
+        connection.close()
 
-except Exception as e:
-    st.error(f"Unable to load historical sensor data: {e}")
+        history["timestamp"] = pd.to_datetime(history["timestamp"])
+        history = history.sort_values("timestamp")
+
+    except Exception:
+        history = pd.DataFrame()
+
+else:
     history = pd.DataFrame()
-
 
 if not history.empty:
 
