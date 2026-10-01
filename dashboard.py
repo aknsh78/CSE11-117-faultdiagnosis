@@ -567,7 +567,7 @@ st.markdown(
 try:
     history = pd.DataFrame()
 
-    # Try PostgreSQL first when available
+    # Use PostgreSQL when available
     if get_connection is not None:
         try:
             connection = get_connection()
@@ -611,24 +611,6 @@ try:
 
 except Exception as e:
     st.error(f"Unable to load historical sensor data: {e}")
-    history = pd.DataFrame()
-
-    # Use GitHub CSV when PostgreSQL is unavailable
-    if history.empty:
-        history = pd.read_csv("historical_data.csv")
-
-        history["timestamp"] = pd.to_datetime(history["timestamp"])
-
-        history = (
-            history
-            .sort_values("timestamp")
-            .tail(100)
-        )
-
-except Exception as e:
-    history = pd.DataFrame()
-
-else:
     history = pd.DataFrame()
 
 if not history.empty:
@@ -1011,42 +993,52 @@ st.markdown("**Historical Fault Records**")
 
 try:
 
-    connection = get_connection()
+    fault_history = pd.DataFrame()
 
-    # Get recent records
-    fault_history = pd.read_sql_query(
-        """
-        SELECT
-            timestamp,
-            fault,
-            severity,
-            cause,
-            recommendation,
-            anomaly_probability,
-            ground_truth_fault
-        FROM public.sensor_readings
-        ORDER BY timestamp DESC
-        LIMIT 100
-        """,
-        connection
-    )
+    # Use PostgreSQL when available
+    if get_connection is not None:
+        try:
+            connection = get_connection()
 
-    connection.close()
+            fault_history = pd.read_sql_query(
+                """
+                SELECT
+                    timestamp,
+                    fault,
+                    severity,
+                    cause,
+                    recommendation,
+                    anomaly_probability,
+                    ground_truth_fault
+                FROM public.sensor_readings
+                ORDER BY timestamp DESC
+                LIMIT 100
+                """,
+                connection
+            )
+
+            connection.close()
+
+        except Exception:
+            fault_history = pd.DataFrame()
+
+    # Use CSV when PostgreSQL is unavailable
+    if fault_history.empty:
+        fault_history = pd.read_csv("historical_data.csv")
+
+        fault_history["timestamp"] = pd.to_datetime(
+            fault_history["timestamp"]
+        )
+
+        fault_history = (
+            fault_history
+            .sort_values("timestamp", ascending=False)
+            .head(100)
+        )
 
     if not fault_history.empty:
 
-        # -----------------------------
-        # Summary counts
-        # -----------------------------
-
         total_records = len(fault_history)
-        anomaly_records = (
-            fault_history["fault"]
-            .astype(str)
-            .str.upper()
-            .eq("ANOMALY")
-            .sum()
-        )
 
         normal_records = (
             fault_history["fault"]
@@ -1055,6 +1047,8 @@ try:
             .eq("NORMAL")
             .sum()
         )
+
+        anomaly_records = total_records - normal_records
 
         s1, s2, s3 = st.columns(3)
 
@@ -1082,34 +1076,36 @@ try:
             </div>
             """)
 
-        # -----------------------------
-        # Fault filter
-        # -----------------------------
-
         filter_option = st.selectbox(
             "Filter Records",
             ["ALL", "NORMAL", "ANOMALY"]
         )
 
-        if filter_option != "ALL":
+        if filter_option == "NORMAL":
             fault_history = fault_history[
                 fault_history["fault"]
                 .astype(str)
                 .str.upper()
-                == filter_option
+                == "NORMAL"
             ]
 
-        # -----------------------------
-        # Convert probability to %
-        # -----------------------------
+        elif filter_option == "ANOMALY":
+            fault_history = fault_history[
+                fault_history["fault"]
+                .astype(str)
+                .str.upper()
+                != "NORMAL"
+            ]
 
         fault_history["anomaly_probability"] = (
-            fault_history["anomaly_probability"] * 100
-        ).round(2)
-
-        # -----------------------------
-        # Rename columns
-        # -----------------------------
+            pd.to_numeric(
+                fault_history["anomaly_probability"],
+                errors="coerce"
+            )
+            .fillna(0)
+            .mul(100)
+            .round(2)
+        )
 
         fault_history = fault_history.rename(
             columns={
@@ -1130,12 +1126,14 @@ try:
         )
 
     else:
-
         st.info("No historical sensor records available.")
 
 except Exception as e:
+    st.error(
+        f"Unable to load historical fault records: {e}"
+    )
 
-    st.error(f"Unable to load historical fault records: {e}")
+
 # =========================================================
 # SYSTEM INFORMATION
 # =========================================================
