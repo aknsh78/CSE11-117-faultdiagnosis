@@ -1,4 +1,5 @@
 import pandas as pd
+import json
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -104,11 +105,43 @@ model.fit(X_train_scaled, y_train)
 
 predictions = model.predict(X_test_scaled)
 
+cm = confusion_matrix(y_test, predictions)
+
+report = classification_report(
+    y_test,
+    predictions,
+    output_dict=True
+)
+
 print("\nConfusion Matrix:")
-print(confusion_matrix(y_test, predictions))
+print(cm)
 
 print("\nClassification Report:")
 print(classification_report(y_test, predictions))
+
+# Save model validation metrics
+metrics = {
+    "accuracy": report["accuracy"],
+
+    "normal": {
+        "precision": report["0.0"]["precision"],
+        "recall": report["0.0"]["recall"],
+        "f1_score": report["0.0"]["f1-score"]
+    },
+
+    "anomaly": {
+        "precision": report["1.0"]["precision"],
+        "recall": report["1.0"]["recall"],
+        "f1_score": report["1.0"]["f1-score"]
+    },
+
+    "confusion_matrix": cm.tolist()
+}
+
+with open("model_metrics.json", "w") as file:
+    json.dump(metrics, file, indent=4)
+
+print("\nModel metrics saved as model_metrics.json")
 
 
 # -----------------------------

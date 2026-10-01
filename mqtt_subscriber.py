@@ -62,13 +62,93 @@ def on_message(client, userdata, msg):
         # ------------------------------------------------
         # 2. Create fault information
         # ------------------------------------------------
+        # ------------------------------------------------
+        # 2. Create dynamic fault information
+        # ------------------------------------------------
 
         if ml_result["prediction"] == 1:
 
             fault = "ANOMALY"
             severity = "HIGH"
-            cause = "Abnormal sensor pattern detected"
-            recommendation = "Inspect machine condition and sensor readings"
+
+            abnormal_sensors = []
+
+            # Normal operating ranges from SKAB normal records
+            normal_ranges = {
+                "Accelerometer1RMS": (0.0261, 0.0285),
+                "Accelerometer2RMS": (0.0382, 0.0437),
+                "Current": (-0.4311, 1.5102),
+                "Pressure": (-0.6011, 0.7106),
+                "Temperature": (69.828, 79.425),
+                "Thermocouple": (24.4479, 26.0702),
+                "Voltage": (205.320, 253.694),
+                "Volume Flow RateRMS": (31.0010, 33.0000)
+            }
+
+            # Check which sensors are outside the normal range
+            for sensor, (lower, upper) in normal_ranges.items():
+
+                sensor_value = data.get(sensor)
+
+                if sensor_value is not None:
+
+                    try:
+                        sensor_value = float(sensor_value)
+
+                        if sensor_value < lower or sensor_value > upper:
+                            abnormal_sensors.append(sensor)
+
+                    except (ValueError, TypeError):
+                        pass
+
+            # Create diagnosis based on abnormal sensors
+            if abnormal_sensors:
+
+                causes = []
+
+                if "Pressure" in abnormal_sensors:
+                    causes.append("Pressure abnormality")
+
+                if "Volume Flow RateRMS" in abnormal_sensors:
+                    causes.append("Flow-system abnormality")
+
+                if (
+                    "Accelerometer1RMS" in abnormal_sensors
+                    or "Accelerometer2RMS" in abnormal_sensors
+                ):
+                    causes.append("Mechanical vibration abnormality")
+
+                if (
+                    "Current" in abnormal_sensors
+                    or "Voltage" in abnormal_sensors
+                ):
+                    causes.append("Electrical abnormality")
+
+                if (
+                    "Temperature" in abnormal_sensors
+                    or "Thermocouple" in abnormal_sensors
+                ):
+                    causes.append("Thermal abnormality")
+
+                cause = ", ".join(causes)
+
+                recommendation = (
+                    "Inspect the abnormal sensor readings "
+                    "and check the corresponding machine subsystem."
+                )
+
+            else:
+
+                # Model detected an anomaly even though
+                # individual sensors are within their normal ranges.
+                cause = (
+                    "Abnormal multivariate sensor pattern detected"
+                )
+
+                recommendation = (
+                    "Inspect machine condition and monitor "
+                    "sensor trends closely."
+                )
 
         else:
 
@@ -76,6 +156,7 @@ def on_message(client, userdata, msg):
             severity = "LOW"
             cause = "No abnormal sensor pattern detected"
             recommendation = "Continue monitoring"
+                
 
 
         # ------------------------------------------------

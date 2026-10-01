@@ -70,9 +70,7 @@ def generate_sensor_data():
     sensor_data = {
         "device_id": "ESP32_001",
 
-        "timestamp": datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        ),
+        "timestamp": datetime.now().isoformat(),
 
         "Accelerometer1RMS": float(
             row["Accelerometer1RMS"]

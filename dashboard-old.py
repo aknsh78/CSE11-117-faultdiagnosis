@@ -1,16 +1,8 @@
-import plotly.express as px
-import plotly.graph_objects as go
 import textwrap
 import streamlit as st
 import json
 import os
 import math
-import pandas as pd
-
-try:
-    from database import get_connection
-except Exception:
-    get_connection = None
 from datetime import datetime
 
 # =========================================================
@@ -29,7 +21,7 @@ st.set_page_config(
 # CUSTOM CSS
 # =========================================================
 
-st.html("""
+st.markdown(textwrap.dedent("""
 <style>
 
     /* ---------- GLOBAL ---------- */
@@ -270,7 +262,7 @@ st.html("""
     }
 
 </style>
-""")
+"""), unsafe_allow_html=True)
 
 
 # =========================================================
@@ -455,14 +447,17 @@ st.html(f"""
 # TOP METRICS
 # =========================================================
 
-st.markdown("**" + "Key Machine Indicators" + "**")
+st.markdown(
+    '<div class="section-title">Key Machine Indicators</div>',
+    unsafe_allow_html=True
+)
 
 c1, c2, c3, c4 = st.columns(4)
 
 
 with c1:
 
-    st.html(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="metric-card">
         <div class="metric-title">TEMPERATURE</div>
         <div class="metric-value">
@@ -470,12 +465,12 @@ with c1:
             <span class="metric-unit">°C</span>
         </div>
     </div>
-    """)
+    """), unsafe_allow_html=True)
 
 
 with c2:
 
-    st.html(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="metric-card">
         <div class="metric-title">CURRENT</div>
         <div class="metric-value">
@@ -483,12 +478,12 @@ with c2:
             <span class="metric-unit">A</span>
         </div>
     </div>
-    """)
+    """), unsafe_allow_html=True)
 
 
 with c3:
 
-    st.html(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="metric-card">
         <div class="metric-title">VOLTAGE</div>
         <div class="metric-value">
@@ -496,26 +491,29 @@ with c3:
             <span class="metric-unit">V</span>
         </div>
     </div>
-    """)
+    """), unsafe_allow_html=True)
 
 
 with c4:
 
-    st.html(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="metric-card">
         <div class="metric-title">FLOW RATE</div>
         <div class="metric-value">
             {number("volume_flow_rate_rms")}
         </div>
     </div>
-    """)
+    """), unsafe_allow_html=True)
 
 
 # =========================================================
 # SENSOR MONITORING
 # =========================================================
 
-st.markdown("**" + "Sensor Monitoring" + "**")
+st.markdown(
+    '<div class="section-title">Sensor Monitoring</div>',
+    unsafe_allow_html=True
+)
 
 left, right = st.columns(2)
 
@@ -531,14 +529,14 @@ with left:
 
     for sensor_name, key in sensors_left:
 
-        st.html(f"""
+        st.markdown(textwrap.dedent(f"""
         <div class="sensor-card">
             <div class="sensor-name">{sensor_name}</div>
             <div class="sensor-value">
                 {number(key)}
             </div>
         </div>
-        """)
+        """), unsafe_allow_html=True)
 
 
 with right:
@@ -552,237 +550,103 @@ with right:
 
     for sensor_name, key in sensors_right:
 
-        st.html(f"""
+        st.markdown(textwrap.dedent(f"""
         <div class="sensor-card">
             <div class="sensor-name">{sensor_name}</div>
             <div class="sensor-value">
                 {number(key)}
             </div>
         </div>
-        """)
+        """), unsafe_allow_html=True)
 
 
 # =========================================================
-# LIVE SENSOR TRENDS
+# AI ANALYSIS
 # =========================================================
 
 st.markdown(
-    '<div class="section-title">📈 Live Sensor Trends</div>',
+    '<div class="section-title">AI Fault Analysis</div>',
     unsafe_allow_html=True
 )
 
-try:
-    connection = get_connection()
-
-    history = pd.read_sql_query(
-        """
-        SELECT
-            timestamp,
-            temperature,
-            current,
-            voltage,
-            accelerometer1_rms,
-            accelerometer2_rms,
-            anomaly_probability,
-            fault
-        FROM public.sensor_readings
-        ORDER BY timestamp DESC
-        LIMIT 100
-        """,
-        connection
-    )
-
-    connection.close()
-
-    history["timestamp"] = pd.to_datetime(history["timestamp"])
-    history = history.sort_values("timestamp")
-
-except Exception as e:
-    st.error(f"Unable to load historical sensor data: {e}")
-    history = pd.DataFrame()
+ai_left, ai_right = st.columns([1, 1])
 
 
-if not history.empty:
+with ai_left:
 
-    # -----------------------------------------------------
-    # Temperature
-    # -----------------------------------------------------
+    try:
+        anomaly_probability = float(value("anomaly_probability", 0))
+        if not math.isfinite(anomaly_probability):
+            anomaly_probability = 0.0
+    except (TypeError, ValueError, OverflowError):
+        anomaly_probability = 0.0
 
-    st.markdown("### 🌡️ Temperature")
+    anomaly_probability = min(max(anomaly_probability, 0.0), 1.0)
+    probability_percent = anomaly_probability * 100
 
-    fig_temp = px.line(
-        history,
-        x="timestamp",
-        y="temperature",
-        markers=False,
-        labels={
-            "timestamp": "Time",
-            "temperature": "Temperature (°C)"
-        }
-    )
+    st.markdown(textwrap.dedent(f"""
+    <div class="ai-panel">
 
-    fig_temp.update_layout(
-        height=350,
-        margin=dict(l=20, r=20, t=20, b=20),
-        xaxis_title="Time",
-        yaxis_title="Temperature (°C)",
-        hovermode="x unified"
-    )
+        <div class="probability-label">
+            ANOMALY PROBABILITY
+        </div>
 
-    st.plotly_chart(
-        fig_temp,
-        use_container_width=True
+        <div class="probability-number">
+            {probability_percent:.1f}%
+        </div>
+
+    </div>
+    """), unsafe_allow_html=True)
+
+    st.progress(
+        min(max(anomaly_probability, 0.0), 1.0)
     )
 
 
-    # -----------------------------------------------------
-    # Current + Voltage
-    # -----------------------------------------------------
+with ai_right:
 
-    col1, col2 = st.columns(2)
+    st.markdown(textwrap.dedent(f"""
+    <div class="info-box">
 
-    with col1:
+        <div class="info-title">
+            Detected Condition
+        </div>
 
-        st.markdown("### ⚡ Current")
+        <div class="info-value">
+            {fault}
+        </div>
 
-        fig_current = px.line(
-            history,
-            x="timestamp",
-            y="current",
-            labels={
-                "timestamp": "Time",
-                "current": "Current (A)"
-            }
-        )
+    </div>
 
-        fig_current.update_layout(
-            height=320,
-            margin=dict(l=20, r=20, t=20, b=20),
-            hovermode="x unified"
-        )
+    <div class="info-box">
 
-        st.plotly_chart(
-            fig_current,
-            use_container_width=True
-        )
+        <div class="info-title">
+            Severity
+        </div>
 
+        <div class="info-value">
+            {severity}
+        </div>
 
-    with col2:
-
-        st.markdown("### 🔌 Voltage")
-
-        fig_voltage = px.line(
-            history,
-            x="timestamp",
-            y="voltage",
-            labels={
-                "timestamp": "Time",
-                "voltage": "Voltage (V)"
-            }
-        )
-
-        fig_voltage.update_layout(
-            height=320,
-            margin=dict(l=20, r=20, t=20, b=20),
-            hovermode="x unified"
-        )
-
-        st.plotly_chart(
-            fig_voltage,
-            use_container_width=True
-        )
-
-
-    # -----------------------------------------------------
-    # Vibration
-    # -----------------------------------------------------
-
-    st.markdown("### 📳 Vibration")
-
-    fig_vibration = go.Figure()
-
-    fig_vibration.add_trace(
-        go.Scatter(
-            x=history["timestamp"],
-            y=history["accelerometer1_rms"],
-            mode="lines",
-            name="Accelerometer 1 RMS"
-        )
-    )
-
-    fig_vibration.add_trace(
-        go.Scatter(
-            x=history["timestamp"],
-            y=history["accelerometer2_rms"],
-            mode="lines",
-            name="Accelerometer 2 RMS"
-        )
-    )
-
-    fig_vibration.update_layout(
-        height=350,
-        xaxis_title="Time",
-        yaxis_title="RMS",
-        hovermode="x unified",
-        margin=dict(l=20, r=20, t=20, b=20)
-    )
-
-    st.plotly_chart(
-        fig_vibration,
-        use_container_width=True
-    )
-
-
-    # -----------------------------------------------------
-    # Anomaly Probability
-    # -----------------------------------------------------
-
-    st.markdown("### 🤖 Anomaly Probability")
-
-    probability = (
-        history["anomaly_probability"]
-        .fillna(0)
-        .clip(0, 1)
-        * 100
-    )
-
-    fig_probability = px.line(
-        x=history["timestamp"],
-        y=probability,
-        labels={
-            "x": "Time",
-            "y": "Anomaly Probability (%)"
-        }
-    )
-
-    fig_probability.update_yaxes(
-        range=[0, 100]
-    )
-
-    fig_probability.update_layout(
-        height=350,
-        hovermode="x unified",
-        margin=dict(l=20, r=20, t=20, b=20)
-    )
-
-    st.plotly_chart(
-        fig_probability,
-        use_container_width=True
-    )
+    </div>
+    """), unsafe_allow_html=True)
 
 
 # =========================================================
 # DIAGNOSIS
 # =========================================================
 
-st.markdown("**" + "Diagnosis & Recommended Action" + "**")
+st.markdown(
+    '<div class="section-title">Diagnosis & Recommended Action</div>',
+    unsafe_allow_html=True
+)
 
 d1, d2 = st.columns(2)
 
 
 with d1:
 
-    st.html(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="info-box">
 
         <div class="info-title">
@@ -794,12 +658,12 @@ with d1:
         </div>
 
     </div>
-    """)
+    """), unsafe_allow_html=True)
 
 
 with d2:
 
-    st.html(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="info-box">
 
         <div class="info-title">
@@ -811,24 +675,27 @@ with d2:
         </div>
 
     </div>
-    """)
+    """), unsafe_allow_html=True)
 
 
 # =========================================================
 # GROUND TRUTH
 # =========================================================
 
-ground_truth = data.get("ground_truth_fault", data.get("ground_truth"))
+ground_truth = data.get("ground_truth")
 
 if ground_truth is not None:
 
-    st.markdown("**" + "Model Validation" + "**")
+    st.markdown(
+        '<div class="section-title">Model Validation</div>',
+        unsafe_allow_html=True
+    )
 
     v1, v2, v3 = st.columns(3)
 
     with v1:
 
-        st.html(f"""
+        st.markdown(textwrap.dedent(f"""
         <div class="info-box">
 
             <div class="info-title">
@@ -840,11 +707,11 @@ if ground_truth is not None:
             </div>
 
         </div>
-        """)
+        """), unsafe_allow_html=True)
 
     with v2:
 
-        st.html(f"""
+        st.markdown(textwrap.dedent(f"""
         <div class="info-box">
 
             <div class="info-title">
@@ -856,7 +723,7 @@ if ground_truth is not None:
             </div>
 
         </div>
-        """)
+        """), unsafe_allow_html=True)
 
     with v3:
 
@@ -867,7 +734,7 @@ if ground_truth is not None:
 
         result = "MATCH" if prediction_matches else "MISMATCH"
 
-        st.html(f"""
+        st.markdown(textwrap.dedent(f"""
         <div class="info-box">
 
             <div class="info-title">
@@ -879,245 +746,23 @@ if ground_truth is not None:
             </div>
 
         </div>
-        """)
+        """), unsafe_allow_html=True)
 
-# =========================================================
-# MODEL PERFORMANCE
-# =========================================================
 
-st.markdown("**" + "Model Performance" + "**")
-
-try:
-    with open("model_metrics.json", "r") as file:
-        metrics = json.load(file)
-
-    m1, m2, m3, m4 = st.columns(4)
-
-    with m1:
-        st.html(f"""
-        <div class="info-box">
-            <div class="info-title">Accuracy</div>
-            <div class="info-value">
-                {metrics["accuracy"] * 100:.2f}%
-            </div>
-        </div>
-        """)
-
-    with m2:
-        st.html(f"""
-        <div class="info-box">
-            <div class="info-title">Anomaly Precision</div>
-            <div class="info-value">
-                {metrics["anomaly"]["precision"] * 100:.2f}%
-            </div>
-        </div>
-        """)
-
-    with m3:
-        st.html(f"""
-        <div class="info-box">
-            <div class="info-title">Anomaly Recall</div>
-            <div class="info-value">
-                {metrics["anomaly"]["recall"] * 100:.2f}%
-            </div>
-        </div>
-        """)
-
-    with m4:
-        st.html(f"""
-        <div class="info-box">
-            <div class="info-title">Anomaly F1 Score</div>
-            <div class="info-value">
-                {metrics["anomaly"]["f1_score"] * 100:.2f}%
-            </div>
-        </div>
-        """)
-    st.markdown("### Confusion Matrix")
-
-    cm = metrics["confusion_matrix"]
-
-    c1, c2 = st.columns(2)
-
-    with c1:
-        st.html(f"""
-        <div class="info-box">
-            <div class="info-title">Actual Normal → Predicted Normal</div>
-            <div class="info-value">{cm[0][0]}</div>
-        </div>
-        """)
-
-    with c2:
-        st.html(f"""
-        <div class="info-box">
-            <div class="info-title">Actual Normal → Predicted Anomaly</div>
-            <div class="info-value">{cm[0][1]}</div>
-        </div>
-        """)
-
-    c3, c4 = st.columns(2)
-
-    with c3:
-        st.html(f"""
-        <div class="info-box">
-            <div class="info-title">Actual Anomaly → Predicted Normal</div>
-            <div class="info-value">{cm[1][0]}</div>
-        </div>
-        """)
-
-    with c4:
-        st.html(f"""
-        <div class="info-box">
-            <div class="info-title">Actual Anomaly → Predicted Anomaly</div>
-            <div class="info-value">{cm[1][1]}</div>
-        </div>
-        """)
-
-except Exception as e:
-    st.warning(f"Model metrics unavailable: {e}")
-# =========================================================
-# HISTORICAL FAULT RECORDS
-# =========================================================
-
-st.markdown("**Historical Fault Records**")
-
-try:
-
-    connection = get_connection()
-
-    # Get recent records
-    fault_history = pd.read_sql_query(
-        """
-        SELECT
-            timestamp,
-            fault,
-            severity,
-            cause,
-            recommendation,
-            anomaly_probability,
-            ground_truth_fault
-        FROM public.sensor_readings
-        ORDER BY timestamp DESC
-        LIMIT 100
-        """,
-        connection
-    )
-
-    connection.close()
-
-    if not fault_history.empty:
-
-        # -----------------------------
-        # Summary counts
-        # -----------------------------
-
-        total_records = len(fault_history)
-        anomaly_records = (
-            fault_history["fault"]
-            .astype(str)
-            .str.upper()
-            .eq("ANOMALY")
-            .sum()
-        )
-
-        normal_records = (
-            fault_history["fault"]
-            .astype(str)
-            .str.upper()
-            .eq("NORMAL")
-            .sum()
-        )
-
-        s1, s2, s3 = st.columns(3)
-
-        with s1:
-            st.html(f"""
-            <div class="info-box">
-                <div class="info-title">Total Records</div>
-                <div class="info-value">{total_records}</div>
-            </div>
-            """)
-
-        with s2:
-            st.html(f"""
-            <div class="info-box">
-                <div class="info-title">Normal Records</div>
-                <div class="info-value">{normal_records}</div>
-            </div>
-            """)
-
-        with s3:
-            st.html(f"""
-            <div class="info-box">
-                <div class="info-title">Anomaly Records</div>
-                <div class="info-value">{anomaly_records}</div>
-            </div>
-            """)
-
-        # -----------------------------
-        # Fault filter
-        # -----------------------------
-
-        filter_option = st.selectbox(
-            "Filter Records",
-            ["ALL", "NORMAL", "ANOMALY"]
-        )
-
-        if filter_option != "ALL":
-            fault_history = fault_history[
-                fault_history["fault"]
-                .astype(str)
-                .str.upper()
-                == filter_option
-            ]
-
-        # -----------------------------
-        # Convert probability to %
-        # -----------------------------
-
-        fault_history["anomaly_probability"] = (
-            fault_history["anomaly_probability"] * 100
-        ).round(2)
-
-        # -----------------------------
-        # Rename columns
-        # -----------------------------
-
-        fault_history = fault_history.rename(
-            columns={
-                "timestamp": "Time",
-                "fault": "Fault",
-                "severity": "Severity",
-                "cause": "Possible Cause",
-                "recommendation": "Recommended Action",
-                "anomaly_probability": "Anomaly Probability (%)",
-                "ground_truth_fault": "Ground Truth"
-            }
-        )
-
-        st.dataframe(
-            fault_history,
-            use_container_width=True,
-            hide_index=True
-        )
-
-    else:
-
-        st.info("No historical sensor records available.")
-
-except Exception as e:
-
-    st.error(f"Unable to load historical fault records: {e}")
 # =========================================================
 # SYSTEM INFORMATION
 # =========================================================
 
-st.markdown("**" + "System Information" + "**")
+st.markdown(
+    '<div class="section-title">System Information</div>',
+    unsafe_allow_html=True
+)
 
 s1, s2, s3 = st.columns(3)
 
 with s1:
 
-    st.html(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="info-box">
 
         <div class="info-title">
@@ -1129,12 +774,12 @@ with s1:
         </div>
 
     </div>
-    """)
+    """), unsafe_allow_html=True)
 
 
 with s2:
 
-    st.html(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="info-box">
 
         <div class="info-title">
@@ -1146,12 +791,12 @@ with s2:
         </div>
 
     </div>
-    """)
+    """), unsafe_allow_html=True)
 
 
 with s3:
 
-    st.html(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="info-box">
 
         <div class="info-title">
@@ -1163,16 +808,16 @@ with s3:
         </div>
 
     </div>
-    """)
+    """), unsafe_allow_html=True)
 
 
 # =========================================================
 # FOOTER
 # =========================================================
 
-st.html("""
+st.markdown(textwrap.dedent("""
 <div class="footer">
     FaultGuard AI · Industrial Predictive Maintenance
     · MQTT · Machine Learning · PostgreSQL
 </div>
-""")
+"""), unsafe_allow_html=True)
