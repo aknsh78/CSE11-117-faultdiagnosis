@@ -564,36 +564,69 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-if get_connection is not None:
+try:
+    history = pd.DataFrame()
 
-    try:
-        connection = get_connection()
+    # Try PostgreSQL first when available
+    if get_connection is not None:
+        try:
+            connection = get_connection()
 
-        history = pd.read_sql_query(
-            """
-            SELECT
-                timestamp,
-                temperature,
-                current,
-                voltage,
-                accelerometer1_rms,
-                accelerometer2_rms,
-                anomaly_probability,
-                fault
-            FROM public.sensor_readings
-            ORDER BY timestamp DESC
-            LIMIT 100
-            """,
-            connection
+            history = pd.read_sql_query(
+                """
+                SELECT
+                    timestamp,
+                    temperature,
+                    current,
+                    voltage,
+                    accelerometer1_rms,
+                    accelerometer2_rms,
+                    anomaly_probability,
+                    fault
+                FROM public.sensor_readings
+                ORDER BY timestamp DESC
+                LIMIT 100
+                """,
+                connection
+            )
+
+            connection.close()
+
+        except Exception:
+            history = pd.DataFrame()
+
+    # Use CSV when PostgreSQL is unavailable
+    if history.empty:
+        history = pd.read_csv("historical_data.csv")
+
+        history["timestamp"] = pd.to_datetime(
+            history["timestamp"]
         )
 
-        connection.close()
+        history = (
+            history
+            .sort_values("timestamp")
+            .tail(100)
+        )
+
+except Exception as e:
+    st.error(f"Unable to load historical sensor data: {e}")
+    history = pd.DataFrame()
+
+    # Use GitHub CSV when PostgreSQL is unavailable
+    if history.empty:
+        history = pd.read_csv("historical_data.csv")
 
         history["timestamp"] = pd.to_datetime(history["timestamp"])
-        history = history.sort_values("timestamp")
 
-    except Exception:
-        history = pd.DataFrame()
+        history = (
+            history
+            .sort_values("timestamp")
+            .tail(100)
+        )
+
+except Exception as e:
+    history = pd.DataFrame()
 
 else:
     history = pd.DataFrame()
