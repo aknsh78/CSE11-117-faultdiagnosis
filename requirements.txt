@@ -5,3 +5,5 @@ scikit-learn
 joblib
 plotly
 psycopg2-binary
+paho-mqtt
+python-dotenv

@@ -87,6 +87,15 @@ st.html("""
         box-shadow: 0 8px 22px rgba(21, 179, 167, .18);
     }
 
+    [data-testid="stButton"] > button {
+        background: linear-gradient(135deg, #1a6c75, #1b9b93);
+        border: 1px solid #46d5c8;
+        color: #effffc;
+        font-weight: 700;
+        box-shadow: 0 8px 22px rgba(21, 179, 167, .18);
+        border-radius: 10px;
+    }
+
     .main-header {
         display: flex;
         justify-content: space-between;
@@ -357,12 +366,47 @@ with st.sidebar:
 
     st.markdown("---")
 
-    if st.button(
-        "🔄 Refresh Dashboard",
-        use_container_width=True
-    ):
-        # Demo/cloud refresh: rotate through real historical records.
-        # Local MQTT/PostgreSQL data remains preferred when available.
+    # Sensor-data loading is controlled from the main header.
+
+
+
+# =========================================================
+# HEADER
+# =========================================================
+
+header_left, header_right = st.columns([5.5, 2.0])
+
+with header_left:
+    st.html("""
+    <div class="main-header">
+        <div>
+            <div class="brand-title">
+                ⚙️ FaultGuard AI
+            </div>
+
+            <div class="brand-subtitle">
+                Intelligent Industrial Fault Detection & Predictive Maintenance
+            </div>
+        </div>
+    </div>
+    """)
+
+with header_right:
+    st.html("""
+    <div style="height: 100%; display: flex; align-items: center; justify-content: center;">
+        <div class="live-badge" style="display: inline-block; margin-bottom: 8px;">
+            ● LIVE MONITORING
+        </div>
+    </div>
+    """)
+
+    load_sensor_data = st.button(
+        "📡 Load New Sensor Data",
+        use_container_width=True,
+        help="Load the next real sensor record from the historical dataset."
+    )
+
+    if load_sensor_data:
         try:
             demo_history = pd.read_csv("historical_data.csv")
             demo_history["timestamp"] = pd.to_datetime(
@@ -406,35 +450,9 @@ with st.sidebar:
                     json.dump(data, file, default=str, indent=2)
 
         except Exception:
-            # If the demo CSV is unavailable, simply rerun the dashboard.
             pass
 
         st.rerun()
-
-
-# =========================================================
-# HEADER
-# =========================================================
-
-st.html("""
-<div class="main-header">
-
-    <div>
-        <div class="brand-title">
-            ⚙️ FaultGuard AI
-        </div>
-
-        <div class="brand-subtitle">
-            Intelligent Industrial Fault Detection & Predictive Maintenance
-        </div>
-    </div>
-
-    <div class="live-badge">
-        ● LIVE MONITORING
-    </div>
-
-</div>
-""")
 
 
 # =========================================================

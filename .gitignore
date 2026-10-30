@@ -1,3 +1,29 @@
+# Environment variables and secrets
 .env
+.env.*
+!.env.example
+
+# Python virtual environments
 venv/
+.venv/
+
+# Python cache
 __pycache__/
+*.py[cod]
+
+# Testing and temporary files
+.pytest_cache/
+.mypy_cache/
+.coverage
+*.log
+
+# IDE and operating system files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Streamlit secrets
+.streamlit/secrets.toml
+# Windows system files
+desktop.ini
+**/desktop.ini
