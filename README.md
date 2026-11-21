@@ -12,7 +12,7 @@ The system combines **IoT-style sensor data transmission, MQTT communication, ma
 
 ## 🔗 Project Links
 
-- **🎥 Demo Video:** [Watch FaultGuard AI Demo](https://drive.google.com/file/d/1xYWvHc_gqJ_iqWKUs5_rX_UNO4uZcMf5/view?usp=drive_link)
+- **🎥 Demo Video:** [Watch FaultGuard AI Demo](https://drive.google.com/file/d/1uMQMG-QwrOBQPemCoXZss17h8lJlDGuR/view?usp=drive_link)
 - **🚀 Live Dashboard:** [FaultGuard AI – Streamlit Cloud](https://faultguard-ai.streamlit.app/)
 - **💻 GitHub Repository:** [FaultGuard AI – GitHub](https://github.com/aknsh78/CSE11-117-faultdiagnosis)
 
