@@ -328,7 +328,7 @@ faultdiagnosis/
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/aknsh78/CSE11-117-faultdiagnosis.git
 cd faultdiagnosis
 ```
 
